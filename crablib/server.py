@@ -6,7 +6,8 @@ from functools import partialmethod
 from typing import Callable, Any, Optional
 from socketserver import BaseRequestHandler
 
-from crablib.http.parse import Request, parse_request
+from crablib.http.errors import HttpError
+from crablib.http.parse import Request, parse_request, Response
 from crablib.http.path import Path
 from crablib.http.response import http_404
 from urls import urls
@@ -29,16 +30,21 @@ class CrabServer(socketserver.BaseRequestHandler):
                 try:
                     item.view(self, request)
                     return
-                except Exception as e:
-                    self.request.sendall(http_404('plain/text', 'error 404'.encode()).write_raw())
-        self.request.sendall(http_404('plain/text', 'error 404'.encode()).write_raw())
+                except HttpError as e:
+                    self.request.sendall(self.http_error(e).write_raw())
+        self.request.sendall(self.http_error(HttpError(404)).write_raw())
+
+    @classmethod
+    def http_error(cls, e: Optional[HttpError]) -> Response:
+        return http_404('plain/text', 'error 404'.encode())
 
 
-def startserver(HOST, PORT, error):
-    crabserver: Callable[[Any], BaseRequestHandler] = CrabServer
-    partialmethod(crabserver, error)
+def startserver(server, HOST, PORT):
+    crabserver: Callable[[Any], BaseRequestHandler] = server
+    partialmethod(crabserver, server.http_error)
+    socketserver.ThreadingTCPServer.allow_reuse_address = True
     with socketserver.ThreadingTCPServer((HOST, int(PORT)), crabserver) as server:
-        webbrowser.open(f'http://localhost:{PORT}')
+        webbrowser.open(f'http://{HOST}:{PORT}')
         try:
             print(f'starting server for {HOST} at {PORT}')
             server.serve_forever()
@@ -46,6 +52,7 @@ def startserver(HOST, PORT, error):
             print('shutting down...')
             server.shutdown()
             server.server_close()
+
 
 
 if __name__ == '__main__':

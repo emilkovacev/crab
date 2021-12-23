@@ -1,8 +1,11 @@
-from crablib.server import startserver
+from crablib.http.parse import Response
+from crablib.http.response import http_404
+from crablib.server import startserver, CrabServer
 
 
-def error(e: Exception) -> bytes:
-    return b'Error 404!'
+class Server(CrabServer):
+    def http_error(self, e) -> Response:
+        return http_404('text/plain', 'new http error!'.encode())
 
 
-startserver('0.0.0.0', 7998, error)
+startserver(Server, '0.0.0.0', 8000)
