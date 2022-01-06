@@ -3,6 +3,7 @@ import unittest
 from crablib.http.websocket import generate_key
 from crablib.http.response import handshake_response
 
+
 class TestGenerateKey(unittest.TestCase):
     def test_mozilla_gen(self):
         sec_websocket_key = 'dGhlIHNhbXBsZSBub25jZQ=='

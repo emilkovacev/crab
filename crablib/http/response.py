@@ -1,6 +1,6 @@
-from typing import Dict, Tuple, List
+from typing import List
 
-from crablib.http.parse import Response, Cookie
+from crablib.http.types import Response, Cookie
 from crablib.http.websocket import generate_key
 
 
@@ -70,19 +70,6 @@ def http_404(content_type: str, content: bytes) -> Response:
     return response
 
 
-def handshake_response(websocket_key: str) -> Response:
-    response = Response(
-        status_code=101,
-        status_message='Switching Protocols',
-        headers={
-            'Connection': 'Upgrade',
-            'Upgrade': 'websocket',
-            'Sec-WebSocket-Accept': generate_key(websocket_key)
-        },
-    )
-    return response
-
-
 def http_201(data: bytes):
     response = Response(
         status_code=201,
@@ -109,3 +96,14 @@ def http_204():
     return response
 
 
+def handshake_response(websocket_key: str) -> Response:
+    response = Response(
+        status_code=101,
+        status_message='Switching Protocols',
+        headers={
+            'Connection': 'Upgrade',
+            'Upgrade': 'websocket',
+            'Sec-WebSocket-Accept': generate_key(websocket_key)
+        },
+    )
+    return response
